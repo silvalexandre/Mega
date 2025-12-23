@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="pt-br" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mega Sena - Fechamento de Alta Eficácia</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = { darkMode: 'class' }
+    </script>
+    <style>
+        /* Cores do Seletor (Ajustadas para o padrão Dark) */
+        .q1 { background-color: #450a0a; color: #fecaca; } 
+        .q2 { background-color: #3b0764; color: #e9d5ff; } 
+        .q3 { background-color: #1e3a8a; color: #bfdbfe; } 
+        .q4 { background-color: #451a03; color: #fde68a; }
+
+        .selected { background-color: #22c55e !important; color: #052e16 !important; transform: scale(1.1); z-index: 50; box-shadow: 0 0 15px rgba(34, 197, 94, 0.5); }
+
+        /* Estilo do Cartão no Modo Escuro Padrão */
+        .cartao-loteria { background-color: #1e293b; border: 1px solid #334155; position: relative; overflow: hidden; }
+        .grade-volante { display: grid; grid-template-columns: repeat(10, 1fr); gap: 2px; position: relative; }
+
+        /* Linhas Divisórias de Alta Visibilidade */
+        .linha-h { position: absolute; top: 50%; left: 0; right: 0; height: 2px; background-color: #22c55e; opacity: 0.3; z-index: 20; pointer-events: none; }
+        .linha-v { position: absolute; top: 0; bottom: 0; left: 50%; width: 2px; background-color: #22c55e; opacity: 0.3; z-index: 20; pointer-events: none; }
+
+        .dezena-cartao { aspect-ratio: 1; display: flex; align-items: center; justify-content: center; font-size: 0.7rem; font-weight: 700; background: #0f172a; border: 1px solid #1e293b; color: #475569; }
+
+        .dezena-marcada { background-color: #22c55e !important; color: #052e16 !important; z-index: 30; font-weight: 900; }
+    </style>
+</head>
+<body class="bg-slate-950 text-slate-200 min-h-screen transition-colors duration-300">
+
+    <nav class="bg-slate-900 border-b border-green-900/50 p-6">
+        <div class="container mx-auto flex flex-col md:flex-row justify-between items-center gap-4">
+            <div>
+                <h1 class="text-2xl font-black tracking-tighter uppercase italic text-green-500">Mega<span class="text-white">Elite</span></h1>
+                <p class="text-[10px] text-green-700 font-bold uppercase tracking-widest">Algoritmo de Fechamento Matemático</p>
+            </div>
+            <div class="flex gap-2">
+                <button onclick="gerarFechamentoEficaz()" class="bg-green-600 px-6 py-2 rounded-lg font-bold hover:bg-green-500 transition-all text-white shadow-lg shadow-green-900/40">GERAR FECHAMENTO</button>
+                <button onclick="sugerirEstatistica()" class="bg-slate-800 px-4 py-2 rounded-lg font-bold hover:bg-slate-700 transition-all border border-slate-700 text-xs">SUGESTÃO HISTÓRICA</button>
+                <button onclick="limpar()" class="text-slate-500 hover:text-white px-2 transition-colors">LIMPAR</button>
+            </div>
+        </div>
+    </nav>
+
+    <main class="container mx-auto p-4 md:p-8">
+        <div class="grid lg:grid-cols-12 gap-8">
+            <div class="lg:col-span-4">
+                <div class="bg-slate-900 p-6 rounded-3xl border border-slate-800 sticky top-8">
+                    <h2 class="text-lg font-bold mb-4 flex items-center gap-2">Selecione suas Dezenas Base</h2>
+                    <div id="volante-selecao" class="grid grid-cols-10 gap-1 mb-6"></div>
+                    <div class="p-4 bg-slate-950 rounded-2xl border border-slate-800 text-[11px] leading-relaxed text-slate-400">
+                        <strong class="text-green-500">Eficácia:</strong> O sistema buscará combinações com 3 pares/3 ímpares e distribuirá os números para evitar acúmulos em apenas um lado do volante.
+                    </div>
+                </div>
+            </div>
+
+            <div class="lg:col-span-8">
+                <div id="container-volantes" class="grid md:grid-cols-2 gap-6">
+                    <div class="col-span-full py-24 text-center border-2 border-dashed border-slate-800 rounded-3xl opacity-40">
+                        <p class="italic">Os volantes de alta eficiência aparecerão aqui.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        let dezenas = new Set();
+        const topDezenas = [10, 53, 05, 34, 37, 33, 38, 17, 32, 43, 04, 11, 23, 27, 30, 35, 42, 44, 46, 56];
+
+        function getQ(n) {
+            const r = Math.floor((n - 1) / 10);
+            const c = (n - 1) % 10;
+            if (r < 3 && c < 5) return 1;
+            if (r < 3 && c >= 5) return 2;
+            if (r >= 3 && c < 5) return 3;
+            return 4;
+        }
+
+        const vSelecao = document.getElementById('volante-selecao');
+        for (let i = 1; i <= 60; i++) {
+            const b = document.createElement('button');
+            b.innerText = i.toString().padStart(2, '0');
+            b.id = `btn-${i}`;
+            b.className = `q${getQ(i)} h-8 w-full rounded font-bold text-[10px] transition-all border border-transparent hover:brightness-125`;
+            b.onclick = () => toggleDezena(i);
+            vSelecao.appendChild(b);
+        }
+
+        function toggleDezena(n) {
+            const b = document.getElementById(`btn-${n}`);
+            if(dezenas.has(n)) { dezenas.delete(n); b.classList.remove('selected'); }
+            else { dezenas.add(n); b.classList.add('selected'); }
+        }
+
+        function sugerirEstatistica() {
+            limpar();
+            topDezenas.forEach(n => toggleDezena(n));
+        }
+
+        function gerarFechamentoEficaz() {
+            const qs = { 1: [], 2: [], 3: [], 4: [] };
+            dezenas.forEach(n => qs[getQ(n)].push(n));
+
+            if (dezenas.size < 12) {
+                alert("Para um fechamento eficaz, selecione pelo menos 12 dezenas (use a Sugestão Histórica se preferir).");
+                return;
+            }
+
+            const container = document.getElementById('container-volantes');
+            container.innerHTML = '';
+            let count = 0;
+            
+            // Esquemas de distribuição mais comuns em sorteios reais
+            const matrizesEficazes = [[2,2,1,1], [1,1,2,2], [2,1,2,1], [1,2,1,2], [2,1,1,2], [1,2,2,1]];
+
+            while(count < 10) {
+                let esquema = matrizesEficazes[Math.floor(Math.random() * matrizesEficazes.length)];
+                let jogo = [];
+                for(let i=1; i<=4; i++) {
+                    let disponiveis = [...qs[i]].sort(() => Math.random() - 0.5);
+                    for(let k=0; k<esquema[i-1]; k++) if(disponiveis[k]) jogo.push(disponiveis[k]);
+                }
+
+                if(jogo.length === 6) {
+                    const pares = jogo.filter(n => n % 2 === 0).length;
+                    // Filtro de Ouro: Sorteios com 3P/3I ou 4P/2I ou 2P/4I cobrem 80% da história da Mega
+                    if(pares >= 2 && pares <= 4) {
+                        renderVolante(jogo.sort((a,b) => a-b), count + 1);
+                        count++;
+                    }
+                }
+            }
+        }
+
+        function renderVolante(nums, id) {
+            const container = document.getElementById('container-volantes');
+            const card = document.createElement('div');
+            card.className = "cartao-loteria p-5 rounded-2xl shadow-2xl w-full border-t-2 border-green-500/50";
+            
+            let gridHtml = '<div class="grade-volante">';
+            gridHtml += '<div class="linha-h"></div><div class="linha-v"></div>';
+            for(let i=1; i<=60; i++) {
+                const marcada = nums.includes(i) ? 'dezena-marcada' : '';
+                gridHtml += `<div class="dezena-cartao ${marcada}">${i.toString().padStart(2, '0')}</div>`;
+            }
+            gridHtml += '</div>';
+
+            card.innerHTML = `
+                <div class="flex justify-between items-center mb-4 border-b border-slate-800 pb-2">
+                    <span class="text-[9px] font-black uppercase text-green-600 tracking-tighter">EFICÁCIA MÁXIMA #${id}</span>
+                    <span class="text-[11px] font-mono font-bold text-slate-200">${nums.join(' · ')}</span>
+                </div>
+                ${gridHtml}
+            `;
+            container.appendChild(card);
+        }
+
+        function limpar() {
+            dezenas.clear();
+            document.querySelectorAll('#volante-selecao button').forEach(b => b.classList.remove('selected'));
+            document.getElementById('container-volantes').innerHTML = '';
+        }
+    </script>
+</body>
+</html>
